@@ -229,7 +229,10 @@ filtered_hh_df_fdr = hh_df_fdr[(hh_df_fdr['pv']<=0.01) & (hh_df_fdr['fdr']<=0.12
 
 filtered_orig_df_fdr = pandas.concat([filtered_rh_df_fdr, filtered_hh_df_fdr])
 filtered_orig_df_fdr.to_csv(results_dir + cantype + "/" + "fdr/" + "_".join(prefix_list+["filtered_pv_fdr"]+suffix_list) + ".txt", sep="\t", index=False)
-filtered_orig_df_fdr.to_csv(Path(__file__).resolve().parent.parent.parent / "data" / "NETWORK" / "_".join(cantype+["me"]+["net"])+".txt",sep="\t", index=False)
+# filtered_orig_df_fdr.to_csv(Path(__file__).resolve().parent.parent.parent / "data" / "NETWORK" / "_".join(cantype+"me"+"net")+".txt",sep="\t", index=False)
+output_filename = "_".join([cantype, "me", "net"]) + ".txt"
+output_path = Path(__file__).resolve().parent.parent.parent / "data" / "NETWORK" / output_filename
+filtered_orig_df_fdr.to_csv(output_path, sep="\t", index=False)
 logging.info("done")
         
 # # (R,H) 
