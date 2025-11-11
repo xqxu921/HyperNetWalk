@@ -1,0 +1,4 @@
+gene1	gene2	jaccard index	pv (ws)
+TTN	CENPF	0.0	0.0913
+MUC16	MET	0.0	0.073
+MUC16	CUBN	0.0	0.0907

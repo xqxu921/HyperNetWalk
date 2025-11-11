@@ -1,0 +1,3 @@
+gene1	gene2	jaccard index	pv (ws)
+TTN	OBSCN	0.0273972602739726	0.0993
+TTN	CREBBP	0.0	0.0674

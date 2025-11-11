@@ -1,0 +1,21 @@
+# R renv files
+renv/library/
+renv/settings.json
+
+# Large data files
+data/
+results/
+logs/
+
+# Temporary or OS files
+*.Rhistory
+*.RData
+*.rds
+.DS_Store
+__pycache__/
+*.pyc
+
+# Conda
+*.conda
+*.lock
+.env

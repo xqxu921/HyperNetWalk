@@ -1,0 +1,17 @@
+name: hypernetwalk
+channels:
+  - conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - r-essentials
+  - r-base=4.5.2
+  - bioconductor-limma
+  - bioconductor-annotate
+  - bioconductor-annotationdbi
+  - r-dplyr
+  - r-ggplot2
+  - r-tidyr
+  - r-data.table
+  - r-devtools
+prefix: /home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/hypernetwalk

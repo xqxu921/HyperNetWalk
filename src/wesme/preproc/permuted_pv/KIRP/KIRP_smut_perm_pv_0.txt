@@ -1,0 +1,4 @@
+gene1	gene2	jaccard index	pv (ws)
+TTN	KDM6A	0.0	0.0656
+TTN	CENPF	0.0	0.0898
+KMT2C	MUC16	0.0	0.0888

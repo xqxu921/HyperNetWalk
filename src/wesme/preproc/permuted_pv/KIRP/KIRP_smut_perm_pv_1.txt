@@ -1,0 +1,5 @@
+gene1	gene2	jaccard index	pv (ws)
+NEB	TTN	0.0	0.0576
+TTN	ANK3	0.0	0.0576
+TTN	RYR1	0.0	0.0659
+MUC16	PKHD1	0.0	0.0676

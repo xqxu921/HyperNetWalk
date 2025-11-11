@@ -1,0 +1,3 @@
+gene1	gene2	jaccard index	pv (ws)
+TTN	CUL3	0.0	0.0663
+TTN	SYNE2	0.014705882352941176	0.0942

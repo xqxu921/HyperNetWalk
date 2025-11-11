@@ -1,0 +1,4 @@
+gene1	gene2	jaccard index	pv (ws)
+TTN	KMT2C	0.0	0.00583
+TTN	BAP1	0.0	0.0223
+TTN	RYR1	0.0	0.0667
