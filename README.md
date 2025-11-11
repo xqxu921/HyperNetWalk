@@ -1,49 +1,416 @@
-# 数据下载说明
+# 🔬 HyperNetWalk
 
-## 自动下载（推荐）
+**HyperNetWalk** is a hypergraph-based framework for **pan-cancer driver gene identification** across multi-omics layers.  
+It integrates **protein–protein interaction (PPI)**, **gene regulatory (GRN)**, and **mutual exclusivity (ME)** networks to identify driver genes at both **cohort** and **individual** levels.
 
-运行下载脚本：
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![R >= 4.5.2](https://img.shields.io/badge/R-%3E%3D4.5.2-green.svg)](https://cran.r-project.org/)
+[![Conda](https://img.shields.io/badge/environment-conda-orange.svg)](https://docs.conda.io/)
+[![WeSME](https://img.shields.io/badge/Python-WeSME-yellow.svg)](https://sourceforge.net/projects/wesme/)
+
+---
+
+## 📋 Table of Contents
+
+- [1. Environment Setup](#1-environment-setup)
+- [2. Data Preparation](#2-data-preparation)
+- [3. Running HyperNetWalk](#3-running-hypernetwalk)
+- [4. Results Evaluation](#4-results-evaluation)
+- [5. Quick Validation (Recommended)](#5-quick-validation-recommended)
+- [6. Repository Structure](#6-repository-structure)
+- [7. Citation](#7-citation)
+- [8. 中文说明(简要)](#8-中文说明简要)
+
+---
+
+## 🧩 1. Environment Setup
+
+Clone this repository and automatically configure all environments:
+
 ```bash
-bash download_data.sh
+git clone https://github.com/xqxu921/HyperNetWalk.git
+cd HyperNetWalk
+bash scripts/setup_environment.sh
 ```
 
-## 网络问题备选方案
+**This script will:**
+- ✅ Create the **Python environment** (for WeSME preprocessing)
+- ✅ Create the **R environment** (`hypernetwalk`, R 4.5.2 with proper `crossprod()` behavior)
+- ✅ Restore all R dependencies using `renv::restore()`
 
-如果遇到网络问题（无法访问 AWS S3 或其他数据源），请直接下载预处理数据：
+After installation, activate the conda environment:
 
-**SourceForge 镜像：**  
-https://sourceforge.net/projects/hypernetwork/files/data/
-
-下载 `data.tar.gz` 后解压到项目根目录：
 ```bash
-tar -xzf data.tar.gz
+conda activate hypernetwalk
 ```
 
-## 预期目录结构
+---
 
+## 📦 2. Data Preparation
+
+You can choose **one of the following methods**:
+
+### Option 1: Download Preprocessed Data from SourceForge (Recommended)
+
+**Download URL:**  
+👉 [https://sourceforge.net/projects/hypernetwork/files/data/](https://sourceforge.net/projects/hypernetwork/files/data/)
+
+**Method 1: Using wget (Recommended)**
+
+```bash
+# Download all data files recursively
+wget -r -np -nH --cut-dirs=4 -R "index.html*" -e robots=off \
+  https://sourceforge.net/projects/hypernetwork/files/data/
+```
+
+**Method 2: Using rsync (if available)**
+
+```bash
+# Sync all data files
+rsync -avP rsync://hypernetwork.dl.sourceforge.net/sourceforge/hypernetwork/data/ ./data/
+```
+
+**Method 3: Manual download**
+
+Visit the URL above and manually download the following required directories:
+- `/DRIVER` - Driver gene annotations
+- `/NETWORK` - PPI and GRN networks
+- `/metadata` - Sample metadata
+- `/processed` - Preprocessed omics data
+
+After downloading, place these directories into the `data/` folder of your project.
+
+**Expected directory structure after download:**
+```
 data/
-├── metadata/
-├── raw/
+├── DRIVER/
 ├── NETWORK/
-└── DRIVER/
+│   ├── STRINGv12.txt
+│   └── RegNet_human_V2.txt
+├── metadata/
+└── processed/
+```
 
-# 环境安装
+### Option 2: Download Raw Data and Preprocess Locally
 
-## 克隆项目
+```bash
+bash scripts/download_raw_data.sh
+bash scripts/preprocess_data.sh
+```
+
+**This will obtain:**
+- 🧬 TCGA Pan-cancer expression and mutation raw files
+- 🎗️ BRCA and 11 other cancer types multi-omics raw data
+- 🔗 STRING v12 protein-protein interaction network raw files
+- 📊 RegNetwork transcriptional regulatory network raw files
+- 📚 COSMIC CGC Tier1 and IntOGen driver gene annotations raw files
+
+---
+
+## 🚀 3. Running HyperNetWalk
+
+### Create Necessary Directories
+
+```bash
+mkdir -p results logs
+```
+
+### Manual Step-by-Step Execution
+
+#### (1) Pan-cancer Cohort-level Prediction
+
+```bash
+/usr/bin/time -v -o logs/pancan_resource_usage.txt \
+  Rscript src/run_hypernetwalk.R \
+    --mode pancancer \
+    --level cohort \
+    --input data/processed \
+    --ppi data/NETWORK/STRINGv12.txt \
+    --grn data/NETWORK/RegNet_human_V2.txt \
+    --output results/ \
+    --cores 64
+```
+
+#### (2) Single Cancer Cohort-level Prediction (e.g., BRCA)
+
+```bash
+/usr/bin/time -v -o logs/brca_cohort_resource.txt \
+  Rscript src/run_hypernetwalk.R \
+    --mode single_cancer \
+    --level cohort \
+    --cancer_type BRCA \
+    --input data/processed/ \
+    --ppi data/NETWORK/STRINGv12.txt \
+    --grn data/NETWORK/RegNet_human_V2.txt \
+    --output results/ \
+    --cores 64
+```
+
+#### (3) Single Cancer Individual-level Prediction (e.g., BRCA)
+
+```bash
+/usr/bin/time -v -o logs/brca_individual_resource.txt \
+  Rscript src/run_hypernetwalk.R \
+    --mode single_cancer \
+    --level individual \
+    --cancer_type BRCA \
+    --input data/processed/ \
+    --ppi data/NETWORK/STRINGv12.txt \
+    --grn data/NETWORK/RegNet_human_V2.txt \
+    --output results/ \
+    --cores 64
+```
+
+---
+
+## 📊 4. Results Evaluation
+
+### Evaluate Pan-cancer Cohort Results
+
+```bash
+Rscript src/evaluation.R \
+  --mode pancancer \
+  --level cohort \
+  --predicted results/PANCAN \
+  --benchmark CGC \
+  --output results/PANCAN/evaluation_results.txt
+```
+
+### Evaluate BRCA Cohort Results
+
+```bash
+Rscript src/evaluation.R \
+  --mode single_cancer \
+  --level cohort \
+  --cancer_type BRCA \
+  --predicted results/BRCA/ \
+  --benchmark CGC \
+  --output results/BRCA/evaluation_results.txt
+```
+
+### Evaluate BRCA Individual Results
+
+```bash
+Rscript src/evaluation.R \
+  --mode single_cancer \
+  --level individual \
+  --cancer_type BRCA \
+  --predicted results/BRCA/ \
+  --benchmark CGC \
+  --output results/BRCA/evaluation_results.txt
+```
+
+---
+
+## ⚡ 5. Quick Validation (Recommended)
+
+### Step 1: Ensure Proper Installation
+
+Make sure you are in the HyperNetWalk directory:
+
+```bash
+cd /path/to/HyperNetWalk
+```
+
+Activate the conda environment:
+
+```bash
+conda activate hypernetwalk
+```
+
+Ensure scripts are executable:
+
+```bash
+chmod +x scripts/run_all_tests.sh scripts/evaluate_all_results.sh
+```
+
+### Step 2: Download Preprocessed Data from SourceForge
+
+Download the required data and scripts from:  
+👉 [https://sourceforge.net/projects/hypernetwork/files/data/](https://sourceforge.net/projects/hypernetwork/files/data/)
+
+### Step 3: Run Complete Testing Workflow
+
+```bash
+bash scripts/run_all_tests.sh
+```
+
+**This script will sequentially run:**
+- Pan-cancer cohort prediction
+- 12 cancer types predictions (both cohort and individual levels for each cancer type)
+
+### Step 4: View Summary Results
+
+After completion, evaluate all results:
+
+```bash
+bash scripts/evaluate_all_results.sh
+cat results/summary_report.txt
+less results/detailed_report.txt
+```
+
+### Step 5: Check Resource Usage
+
+View resource usage logs:
+
+```bash
+ls -lh logs/
+cat logs/*_resource_usage.txt | grep "Maximum resident set size"
+```
+
+---
+
+## 📁 6. Repository Structure
+
+```
+HyperNetWalk/
+├── data/                          # Omics and network data
+│   ├── DRIVER/                    # Driver gene annotations
+│   ├── NETWORK/                   # PPI and GRN networks
+│   │   ├── STRINGv12.txt         # STRING v12 PPI network
+│   │   └── RegNet_human_V2.txt   # RegNetwork GRN
+│   ├── metadata/                  # Sample metadata
+│   └── processed/                 # Preprocessed omics data
+├── results/                       # Model outputs
+│   ├── PANCAN/                    # Pan-cancer results
+│   ├── BRCA/                      # BRCA results
+│   ├── summary_report.txt         # Summary report
+│   └── detailed_report.txt        # Detailed report
+├── logs/                          # Resource usage logs
+├── scripts/                       # Setup & automation scripts
+│   ├── setup_environment.sh       # Environment configuration
+│   ├── download_raw_data.sh       # Data download script
+│   ├── preprocess_data.sh         # Data preprocessing script
+│   ├── run_all_tests.sh           # Automated testing workflow
+│   └── evaluate_all_results.sh    # Automated evaluation workflow
+├── src/                           # Source code
+│   ├── wesme/                     # Python-based preprocessing module
+│   ├── run_hypernetwalk.R         # Main HyperNetWalk model
+│   └── evaluation.R               # Evaluation and benchmarking
+├── environment.yml                # Conda environment for R
+├── renv.lock                      # R package snapshot
+└── README.md                      # This file
+```
+
+---
+
+## ✨ 7. Citation
+
+If you use **HyperNetWalk** in your research, please cite:
+
+```bibtex
+@article{xu2025hypernetwalk,
+  title={HyperNetWalk: Integrative Hypergraph-based Framework for Pan-cancer Driver Gene Identification},
+  author={Xu, XQ and others},
+  journal={Journal Name},
+  year={2025},
+  publisher={Publisher}
+}
+```
+
+---
+
+## 🇨🇳 8. 中文说明(简要)
+
+**HyperNetWalk** 是一个基于超图的泛癌驱动基因识别框架，整合了多组学数据层。
+
+### 快速开始
+
+#### 一、配置运行环境
+
+```bash
+# 克隆仓库并配置环境
 git clone https://github.com/xqxu921/HyperNetWalk.git
 cd HyperNetWalk
 bash scripts/setup_environment.sh
 
 # 激活conda环境
 conda activate hypernetwalk
+```
 
-## 注意事项
+#### 二、数据准备
 
-需要联网以安装 Conda 包和 CRAN/Bioconductor 包。
+**方式一：从SourceForge下载预处理数据（推荐）**
 
-建议 Conda 使用 conda-forge 作为主渠道以保证 R 4.5.2 的兼容性。
+访问：https://sourceforge.net/projects/hypernetwork/files/data/
 
-如果中途报错，可尝试删除已有环境再重建：
-conda remove -n hypernetwalk --all
-conda remove -n wesme --all
-bash setup_environment.sh
+**使用 wget 下载（推荐）：**
+```bash
+# 递归下载所有数据文件
+wget -r -np -nH --cut-dirs=4 -R "index.html*" -e robots=off \
+  https://sourceforge.net/projects/hypernetwork/files/data/
+```
+
+**使用 rsync 下载（如果可用）：**
+```bash
+# 同步所有数据文件
+rsync -avP rsync://hypernetwork.dl.sourceforge.net/sourceforge/hypernetwork/data/ ./data/
+```
+
+**手动下载：**
+下载以下目录：`/DRIVER`, `/NETWORK`, `/metadata`, `/processed`，并放置到项目的 `data/` 目录下
+
+**方式二：使用脚本下载原始数据并预处理**
+
+```bash
+bash scripts/download_raw_data.sh
+bash scripts/preprocess_data.sh
+```
+
+#### 三、运行HyperNetWalk
+
+```bash
+# 创建必要的目录
+mkdir -p results logs
+
+# Pan-cancer群体水平预测
+/usr/bin/time -v -o logs/pancan_resource_usage.txt \
+  Rscript src/run_hypernetwalk.R \
+    --mode pancancer \
+    --level cohort \
+    --input data/processed \
+    --ppi data/NETWORK/STRINGv12.txt \
+    --grn data/NETWORK/RegNet_human_V2.txt \
+    --output results/ \
+    --cores 64
+```
+
+#### 四、快速验证（推荐）
+
+```bash
+# 1. 确保脚本可执行
+chmod +x scripts/run_all_tests.sh scripts/evaluate_all_results.sh
+
+# 2. 运行完整测试流程
+bash scripts/run_all_tests.sh
+
+# 3. 查看汇总结果
+bash scripts/evaluate_all_results.sh
+cat results/summary_report.txt
+less results/detailed_report.txt
+
+# 4. 查看资源使用情况
+ls -lh logs/
+cat logs/*_resource_usage.txt | grep "Maximum resident set size"
+```
+
+### 主要特点
+
+- 🧬 **多组学整合**：结合突变、表达和网络数据
+- 🔗 **网络驱动**：利用 PPI、GRN 和互斥网络
+- 🎯 **双层预测**：支持队列级和个体级分析
+- 🌐 **泛癌能力**：跨多种癌症类型识别驱动基因
+
+### 联系方式
+
+如有问题，请通过 [GitHub Issues](https://github.com/xqxu921/HyperNetWalk/issues) 联系我们。
+
+---
+
+<div align="center">
+
+**⭐ 如果 HyperNetWalk 对您有帮助，请给我们一个 Star！⭐**
+
+Made with ❤️ by the HyperNetWalk Team
+
+</div>
