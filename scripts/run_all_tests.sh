@@ -133,6 +133,34 @@ run_pancancer_cohort() {
         print_info "峰值内存使用: $((max_mem / 1024)) MB"
     fi
 }
+run_cancer_type_all() {
+    local cancer_type=$1
+    print_header "运行 ${cancer_type} 群体水平预测"
+    
+    local start_time=$(date +%s)
+    local log_file="$LOG_DIR/${cancer_type}_cohort_resource.txt"
+    
+    $TIME_CMD -o "$log_file" \
+    Rscript src/run_hypernetwalk.R \
+        --mode single_cancer \
+        --level all \
+        --cancer_type "$cancer_type" \
+        --input "$INPUT_DIR/" \
+        --ppi "$PPI_NETWORK" \
+        --grn "$GRN_NETWORK" \
+        --output "$OUTPUT_DIR/" \
+        --cores "$CORES" 2>&1 | tee "$LOG_DIR/${cancer_type}_cohort&individual.log"
+    
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    print_success "${cancer_type} 群体+个体预测完成 (用时: ${duration}秒)"
+    
+    if [ -f "$log_file" ] && grep -q "Maximum resident set size" "$log_file"; then
+        local max_mem=$(grep "Maximum resident set size" "$log_file" | awk '{print $6}')
+        print_info "峰值内存使用: $((max_mem / 1024)) MB"
+    fi
+}
 
 run_cancer_type_cohort() {
     local cancer_type=$1
@@ -255,18 +283,24 @@ main() {
     
     # 1. Pan-cancer群体预测
     run_pancancer_cohort
-    
-    # 2. 各癌症类型群体预测
-    print_header "开始癌症类型群体预测 (${#CANCER_TYPES[@]}个)"
+
+    # 2. 各癌症类型群体+个体预测
+    print_header "开始癌症类型群体+个体预测 (${#CANCER_TYPES[@]}个)"
     for cancer in "${CANCER_TYPES[@]}"; do
-        run_cancer_type_cohort "$cancer"
+        run_cancer_type_all "$cancer"
     done
     
-    # 3. 各癌症类型个体预测
-    print_header "开始癌症类型个体预测 (${#CANCER_TYPES[@]}个)"
-    for cancer in "${CANCER_TYPES[@]}"; do
-        run_cancer_type_individual "$cancer"
-    done
+    # # 2. 各癌症类型群体预测
+    # print_header "开始癌症类型群体预测 (${#CANCER_TYPES[@]}个)"
+    # for cancer in "${CANCER_TYPES[@]}"; do
+    #     run_cancer_type_cohort "$cancer"
+    # done
+    
+    # # 3. 各癌症类型个体预测
+    # print_header "开始癌症类型个体预测 (${#CANCER_TYPES[@]}个)"
+    # for cancer in "${CANCER_TYPES[@]}"; do
+    #     run_cancer_type_individual "$cancer"
+    # done
     
     # 生成摘要
     generate_summary
