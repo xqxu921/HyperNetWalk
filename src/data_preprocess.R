@@ -190,7 +190,7 @@ main <- function(cancer_types, base_dir = "./data") {
     stop("Raw data directory not found: ", raw_data_dir)
   }
 
-  gene_metadata_file <- file.path(base_dir, "gene_mapping", "gencode.v36.annotation.gtf.gene.probemap")
+  gene_metadata_file <- file.path(base_dir, "metadata", "gencode.v36.annotation.gtf.gene.probemap")
   if (!file.exists(gene_metadata_file)) {
     stop("Gene metadata file not found: ", gene_metadata_file)
   }

@@ -6,7 +6,7 @@ It integrates **protein–protein interaction (PPI)**, **gene regulatory (GRN)**
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![R >= 4.5.2](https://img.shields.io/badge/R-%3E%3D4.5.2-green.svg)](https://cran.r-project.org/)
 [![Conda](https://img.shields.io/badge/environment-conda-orange.svg)](https://docs.conda.io/)
-[![WeSME](https://img.shields.io/badge/Python-WeSME-yellow.svg)](https://sourceforge.net/projects/wesme/)
+[![WeSME](https://img.shields.io/badge/Python-WeSME-yellow.svg)](https://www.ncbi.nlm.nih.gov/CBBresearch/Przytycka/index.cgi#wesme)
 
 ---
 
@@ -52,44 +52,85 @@ You can choose **one of the following methods**:
 
 ### Option 1: Download Preprocessed Data from SourceForge (Recommended)
 
-**Download URL:**  
-👉 [https://sourceforge.net/projects/hypernetwork/files/data/](https://sourceforge.net/projects/hypernetwork/files/data/)
+#### Method 1: Download ZIP Files (Recommended) ⭐
 
-**Method 1: Using wget (Recommended)**
+Download the following ZIP files from SourceForge:
+- `DRIVER.zip` - Driver gene annotations
+- `NETWORK.zip` - PPI and GRN networks
+- `metadata.zip` - Sample metadata
+- `processed.zip` - Preprocessed omics data
 
-```bash
-# Download all data files recursively
-wget -r -np -nH --cut-dirs=4 -R "index.html*" -e robots=off \
-  https://sourceforge.net/projects/hypernetwork/files/data/
-```
-
-**Method 2: Using rsync (if available)**
+**Using wget:**
 
 ```bash
-# Sync all data files
-rsync -avP rsync://hypernetwork.dl.sourceforge.net/sourceforge/hypernetwork/data/ ./data/
+# Download all ZIP files
+wget https://sourceforge.net/projects/hypernetwalk/files/data/DRIVER.zip/download -O DRIVER.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/NETWORK.zip/download -O NETWORK.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/metadata.zip/download -O metadata.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/processed.zip/download -O processed.zip
+
+# Extract all files to data directory
+unzip -q DRIVER.zip -d data/
+unzip -q NETWORK.zip -d data/
+unzip -q metadata.zip -d data/
+unzip -q processed.zip -d data/
+
+# Clean up ZIP files (optional)
+rm DRIVER.zip NETWORK.zip metadata.zip processed.zip
 ```
 
-**Method 3: Manual download**
+**Using curl:**
 
-Visit the URL above and manually download the following required directories:
-- `/DRIVER` - Driver gene annotations
-- `/NETWORK` - PPI and GRN networks
-- `/metadata` - Sample metadata
-- `/processed` - Preprocessed omics data
+```bash
+# Download all ZIP files
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/DRIVER.zip/download -o DRIVER.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/NETWORK.zip/download -o NETWORK.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/metadata.zip/download -o metadata.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/processed.zip/download -o processed.zip
 
-After downloading, place these directories into the `data/` folder of your project.
+# Extract all files to data directory
+unzip -q DRIVER.zip -d data/
+unzip -q NETWORK.zip -d data/
+unzip -q metadata.zip -d data/
+unzip -q processed.zip -d data/
 
-**Expected directory structure after download:**
+# Clean up ZIP files (optional)
+rm DRIVER.zip NETWORK.zip metadata.zip processed.zip
+```
+
+#### Method 2: Manual Download
+
+1. Visit: https://sourceforge.net/projects/hypernetwork/files/data/
+2. Click to download each ZIP file:
+   - `DRIVER.zip`
+   - `NETWORK.zip`
+   - `metadata.zip`
+   - `processed.zip`
+3. Extract all ZIP files to the `data/` directory in your project
+
+**Expected directory structure after extraction:**
 ```
 data/
 ├── DRIVER/
+│   ├── CGC_Tier1.tsv
+│   └── Compendium_Cancer_Genes.tsv
 ├── NETWORK/
 │   ├── STRINGv12.txt
-│   └── RegNet_human_V2.txt
+│   ├── RegNet_human_V2.txt
+│   ├── BRCA_me_net.txt
+│   └── [ME net of other cancer types]
 ├── metadata/
+│   ├── gencode.v36.annotation.gtf.gene.probemap
+│   └── 9606.protein.info.v12.0.txt
 └── processed/
+    ├── PANCAN/
+    ├── BRCA/
+    └── [other cancer types]
 ```
+**⚠️ Important Notes:**
+- Ensure you have `unzip` installed on your system
+- Total download size: Check SourceForge for file sizes
+- Ensure you have sufficient disk space for both ZIP files and extracted data
 
 ### Option 2: Download Raw Data and Preprocess Locally
 
