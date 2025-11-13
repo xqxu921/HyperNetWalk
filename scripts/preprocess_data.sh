@@ -36,8 +36,8 @@ echo ">>> 激活 conda 环境: wesme"
 conda activate wesme || { echo "无法激活 wesme 环境"; exit 1; }
 
 # 定义癌症数据集数组
-cancer_types=("BRCA" "COAD" "HNSC" "KIRC" "KIRP" "LIHC" "LUAD" "LUSC" "PRAD" "STAD" "THCA" "UCEC")
-cancer_types=("BRCA" "COAD" "HNSC" "KIRC" "KIRP" "LIHC" "LUAD" "LUSC")
+cancer_types=("PANCAN" "BRCA" "COAD" "HNSC" "KIRC" "KIRP" "LIHC" "LUAD" "LUSC" "PRAD" "STAD" "THCA" "UCEC")
+# cancer_types=("BRCA" "COAD" "HNSC" "KIRC" "KIRP" "LIHC" "LUAD" "LUSC")
 # -----------------------------
 # 2.1 预处理突变矩阵并计算 ME 值
 # -----------------------------
