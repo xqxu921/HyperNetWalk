@@ -9,6 +9,7 @@ library(data.table)
 library(readr)
 library(dplyr)
 library(purrr)
+library(WGCNA)
 
 # Main function -----------------------------------------------------------
 DGScore <- function(cancer_type,
@@ -17,7 +18,7 @@ DGScore <- function(cancer_type,
                     exp_data_file,
                     PPI_file,
                     GRN_file,
-                    DEN_file,
+                    DEN_file = NULL,
                     ME_file = NULL,
                     PPI_thre = 0.4,
                     DEG = TRUE,
@@ -75,16 +76,10 @@ DGScore <- function(cancer_type,
   if (exp_genes_in_GRN){
     exp_data <- exp_data[intersect(rownames(exp_data),union(V(rGRN)$name,rownames(mut_data))),]
   }
-  DEN_mat <- readRDS(DEN_file)
-  DEN_mat@x[DEN_mat@x < 0.5] <- 0
-  DEN_mat <- drop0(DEN_mat)
-  # CEN <- NULL
-  # if (!is.null(CEN_file)) {
-  #   CEN <- get_network(CEN_file, cutoff = CEN_thre)
-  # }
-  
-  # CEN <- intersection(CEN,PPI_network,byname=TRUE)
-  
+  # DEN_mat <- readRDS(DEN_file)
+  # DEN_mat@x[DEN_mat@x < 0.5] <- 0
+  # DEN_mat <- drop0(DEN_mat)
+
   gene_length_df <- read_tsv("./data/metadata/gencode.v36.annotation.gtf.gene.probemap",
                              show_col_types = FALSE) %>%
     mutate(length = chromEnd - chromStart + 1) %>%
@@ -110,6 +105,10 @@ DGScore <- function(cancer_type,
                      use_cpdegs1)
   # genes <- union(rownames(mut_data),unique(unlist(nodes$degs)))
   # genes <- Reduce(union,list(rownames(mut_data),unique(unlist(nodes$degs)),unique(unlist(nodes$aegs))))
+  DEN_mat <- nodes$cen_mat
+  nodes$cen_mat <- NULL
+  DEN_mat@x[DEN_mat@x < 0.5] <- 0
+  DEN_mat <- drop0(DEN_mat)
   genes <- Reduce(union,list(rownames(mut_data),unique(unlist(nodes$degs)),nodes$degs_coh,unique(unlist(nodes$aegs))))
   DEN_mat <- DEN_mat[intersect(rownames(DEN_mat),genes), intersect(rownames(DEN_mat),genes)]
   nodes <- randomwalk_persample(
@@ -501,7 +500,25 @@ get_nodes <- function(cancer_type,
                                                                         1)]
     }
   }
+  logMessage("Calculating gene coexpression network...")
+  exp_cor_tumor <- WGCNA::cor(t(exp_data_tumor), method = "pearson", nThreads = 32)
+  exp_cor_tumor[is.na(exp_cor_tumor)] <- 0
+  uptri_idx <- which(upper.tri(exp_cor_tumor), arr.ind = TRUE)
+
+  if (ncol(exp_data_normal) > 1) {
+    exp_cor_normal <- WGCNA::cor(t(exp_data_normal), method = "pearson",nThreads = 32)
+    exp_cor_normal[is.na(exp_cor_normal)] <- 0
+    exp_cor_union <- pmax(abs(exp_cor_tumor),abs(exp_cor_normal))
+  } else {
+    exp_cor_union <- abs(exp_cor_tumor)
+  }
   
+  exp_cor_upper <- matrix(0,nrow = nrow(exp_cor_tumor),ncol = ncol(exp_cor_tumor),dimnames = list(rownames(exp_cor_tumor),colnames(exp_cor_tumor)))
+  exp_cor_upper[uptri_idx] <- exp_cor_union[uptri_idx]
+  exp_cor_sparse <- Matrix(exp_cor_upper,sparse = TRUE)
+  rm(exp_cor_union)
+  gc()
+
   exp_data_tumor <- exp_data_tumor[, com_samples]
   com_samples <- substr(com_samples, 1, 12)
   colnames(mut_data) <- com_samples
@@ -510,7 +527,7 @@ get_nodes <- function(cancer_type,
     colnames(deg_mat) <- substr(colnames(deg_mat), 1, 12)
     deg_mat <- deg_mat[, com_samples]
   }
-  
+  logMessage("Calculating aberrant expression matrix...")
   exp_data_tumor_scaled <-
     scale(t(exp_data_tumor), center = T, scale = T)
   exp_data_tumor_scaled[is.na(exp_data_tumor_scaled)] <- 0
@@ -538,6 +555,7 @@ get_nodes <- function(cancer_type,
   return(
     list(
       mut_mat = mut_data,
+      cen_mat = exp_cor_sparse,
       deg_mat = deg_mat,
       aeg_mat  = aeg_mat,
       mut_genes = mut_genes,

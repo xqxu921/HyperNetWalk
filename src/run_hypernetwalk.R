@@ -48,7 +48,7 @@ if (args$mode == "pancancer") {
     cancer_type <- args$cancer_type
 }
 ME_file <- paste0("./data/NETWORK/", cancer_type,"_me_net.txt")
-DEN_file <- file.path("./data/processed", cancer_type,"CEN_union_matrix_uptri.rds")
+# DEN_file <- file.path("./data/processed", cancer_type,"CEN_union_matrix_uptri.rds")
 if (!file.exists(ME_file)){
   ME_file <- NULL
 }
@@ -58,7 +58,7 @@ DGScore(cancer_type = cancer_type,
         exp_data_file = exp_data_file,
         PPI_file = args$ppi,
         GRN_file = args$grn,
-        DEN_file = DEN_file,
+        # DEN_file = DEN_file,
         ME_file = ME_file,
         num_cores = args$cores,
         level = args$level

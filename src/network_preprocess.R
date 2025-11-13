@@ -71,7 +71,7 @@ for (cancer_type in cancers) {
   }
   
   # exp_data <- get_exp_data(exp_data_file)
-  # 
+  
   # exp_genes <- rownames(exp_data)
   # exp_cor <- cor(t(exp_data), method = "pearson")
   # uptri_idx <- which(upper.tri(exp_cor), arr.ind = TRUE)
@@ -150,7 +150,7 @@ for (cancer_type in cancers) {
     #                               gene2 = rownames(exp_cor_tumor)[uptri_idx[, 2]],
     #                               cor = abs(exp_cor_tumor[uptri_idx]))
     exp_cor_union <- abs(exp_cor_tumor) 
-    next
+    # next
   }
   # exp_cor_union_df <- exp_cor_union_df[exp_cor_union_df$cor != 0, ]
   # CEN_union_gz_file <- file.path("./data/processed_data",cancer_type,"CEN_union.txt.gz")

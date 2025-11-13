@@ -14,4 +14,12 @@ dependencies:
   - r-tidyr
   - r-data.table
   - r-devtools
+  - tree
+  - libiconv
+  - zlib
+  - openssl
+  - libpng
+  - libcurl
+  - icu
+  - pandoc
 prefix: /home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/hypernetwalk
