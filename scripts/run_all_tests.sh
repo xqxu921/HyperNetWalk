@@ -135,10 +135,10 @@ run_pancancer_cohort() {
 }
 run_cancer_type_all() {
     local cancer_type=$1
-    print_header "运行 ${cancer_type} 群体水平预测"
+    print_header "运行 ${cancer_type} 群体+个体水平预测"
     
     local start_time=$(date +%s)
-    local log_file="$LOG_DIR/${cancer_type}_cohort_resource.txt"
+    local log_file="$LOG_DIR/${cancer_type}_all_resource.txt"
     
     $TIME_CMD -o "$log_file" \
     Rscript src/run_hypernetwalk.R \
@@ -234,8 +234,8 @@ generate_summary() {
         echo "完成的任务:"
         echo "  - Pan-cancer 群体预测: ✓"
         echo "  - 癌症类型数量: ${#CANCER_TYPES[@]}"
-        echo "  - 群体预测: ${#CANCER_TYPES[@]} 个癌症类型"
-        echo "  - 个体预测: ${#CANCER_TYPES[@]} 个癌症类型"
+        echo "  - 群体+个体预测: ${#CANCER_TYPES[@]} 个癌症类型"
+        # echo "  - 个体预测: ${#CANCER_TYPES[@]} 个癌症类型"
         echo ""
         echo "资源使用统计:"
         echo "--------------------------------------"
@@ -248,14 +248,14 @@ generate_summary() {
         
         for cancer in "${CANCER_TYPES[@]}"; do
             echo "${cancer}:"
-            if [ -f "$LOG_DIR/${cancer}_cohort_resource.txt" ]; then
-                echo "  Cohort:"
+            if [ -f "$LOG_DIR/${cancer}_all_resource.txt" ]; then
+                echo "  Cohort & Individual:"
                 grep "Elapsed (wall clock) time\|Maximum resident set size" "$LOG_DIR/${cancer}_cohort_resource.txt" || echo "    未找到资源信息"
             fi
-            if [ -f "$LOG_DIR/${cancer}_individual_resource.txt" ]; then
-                echo "  Individual:"
-                grep "Elapsed (wall clock) time\|Maximum resident set size" "$LOG_DIR/${cancer}_individual_resource.txt" || echo "    未找到资源信息"
-            fi
+            # if [ -f "$LOG_DIR/${cancer}_individual_resource.txt" ]; then
+            #     echo "  Individual:"
+            #     grep "Elapsed (wall clock) time\|Maximum resident set size" "$LOG_DIR/${cancer}_individual_resource.txt" || echo "    未找到资源信息"
+            # fi
             echo ""
         done
         
