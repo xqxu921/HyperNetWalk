@@ -146,7 +146,7 @@ DGScore <- function(cancer_type,
     com_samples <- colnames(mut_data)
     # colnames(mut_data) <- substr(colnames(mut_data), 1, 12)
     # mut_data <- mut_data[, com_samples]
-    exp_data <- exp_data[, grep("-01A$", colnames(exp_data))]
+    exp_data <- exp_data[, grep("-01A$|-01$", colnames(exp_data))]
     colnames(exp_data) <- substr(colnames(exp_data), 1, 12)
     exp_data <- exp_data[, com_samples]
     co_mut <- t(mut_data) %*% mut_data

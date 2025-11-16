@@ -56,8 +56,8 @@ You can choose **one of the following methods**:
 
 Download the following ZIP files from SourceForge:
 - `DRIVER.zip` - Driver gene annotations
-- `NETWORK.zip` - PPI and GRN networks
-- `metadata.zip` - Sample metadata
+- `NETWORK.zip` - PPI, GRN networks and mutual exclusive networks
+- `metadata.zip` - Gene metadata
 - `processed.zip` - Preprocessed omics data
 
 **Using wget:**
@@ -100,7 +100,7 @@ rm DRIVER.zip NETWORK.zip metadata.zip processed.zip
 
 #### Method 2: Manual Download
 
-1. Visit: https://sourceforge.net/projects/hypernetwork/files/data/
+1. Visit: https://sourceforge.net/projects/hypernetwalk/files/data/
 2. Click to download each ZIP file:
    - `DRIVER.zip`
    - `NETWORK.zip`
@@ -268,7 +268,7 @@ chmod +x scripts/run_all_tests.sh scripts/evaluate_all_results.sh
 ### Step 2: Download Preprocessed Data from SourceForge
 
 Download the required data and scripts from:  
-👉 [https://sourceforge.net/projects/hypernetwork/files/data/](https://sourceforge.net/projects/hypernetwork/files/data/)
+👉 [https://sourceforge.net/projects/hypernetwalk/files/data/](https://sourceforge.net/projects/hypernetwalk/files/data/)
 
 ### Step 3: Run Complete Testing Workflow
 
@@ -373,23 +373,46 @@ conda activate hypernetwalk
 
 **方式一：从SourceForge下载预处理数据（推荐）**
 
-访问：https://sourceforge.net/projects/hypernetwork/files/data/
+访问：https://sourceforge.net/projects/hypernetwalk/files/data/
 
 **使用 wget 下载（推荐）：**
 ```bash
-# 递归下载所有数据文件
-wget -r -np -nH --cut-dirs=4 -R "index.html*" -e robots=off \
-  https://sourceforge.net/projects/hypernetwork/files/data/
+# 下载所有ZIP文件
+wget https://sourceforge.net/projects/hypernetwalk/files/data/DRIVER.zip/download -O DRIVER.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/NETWORK.zip/download -O NETWORK.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/metadata.zip/download -O metadata.zip
+wget https://sourceforge.net/projects/hypernetwalk/files/data/processed.zip/download -O processed.zip
+
+# 解压ZIP文件到data/目录下
+unzip -q DRIVER.zip -d data/
+unzip -q NETWORK.zip -d data/
+unzip -q metadata.zip -d data/
+unzip -q processed.zip -d data/
+
+# 清除ZIP文件(可选)
+rm DRIVER.zip NETWORK.zip metadata.zip processed.zip
 ```
 
-**使用 rsync 下载（如果可用）：**
+**使用 curl：**
 ```bash
-# 同步所有数据文件
-rsync -avP rsync://hypernetwork.dl.sourceforge.net/sourceforge/hypernetwork/data/ ./data/
+# 下载所有ZIP文件
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/DRIVER.zip/download -o DRIVER.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/NETWORK.zip/download -o NETWORK.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/metadata.zip/download -o metadata.zip
+curl -L https://sourceforge.net/projects/hypernetwalk/files/data/processed.zip/download -o processed.zip
+
+# 解压ZIP文件到data/目录下
+unzip -q DRIVER.zip -d data/
+unzip -q NETWORK.zip -d data/
+unzip -q metadata.zip -d data/
+unzip -q processed.zip -d data/
+
+# 清除ZIP文件(可选)
+rm DRIVER.zip NETWORK.zip metadata.zip processed.zip
 ```
 
 **手动下载：**
-下载以下目录：`/DRIVER`, `/NETWORK`, `/metadata`, `/processed`，并放置到项目的 `data/` 目录下
+下载以下目录：`DRIVER.zip`, `NETWORK.zip`, `metadata.zip`, `processed.zip`，并解压放置到项目的 `data/` 目录下
 
 **方式二：使用脚本下载原始数据并预处理**
 

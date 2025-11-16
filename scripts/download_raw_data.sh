@@ -9,7 +9,7 @@ set -euo pipefail
 # 如果遇到网络连接问题（如无法访问 AWS S3 或 StringDB），
 # 可以直接从 SourceForge 下载已处理的数据：
 # 
-#   https://sourceforge.net/projects/hypernetwork/files/data/processed_data/
+#   https://sourceforge.net/projects/hypernetwalk/files/data/processed_data/
 # 
 # 下载后解压到项目根目录即可，无需运行此脚本。
 # ============================================================
@@ -190,7 +190,7 @@ echo ""
 if [ -s "$ERROR_LOG" ]; then
     echo -e "${RED}⚠ 存在失败项，请检查: $ERROR_LOG${NC}"
     echo -e "${YELLOW}如果网络问题无法解决，可从以下地址下载完整数据：${NC}"
-    echo -e "${BLUE}https://sourceforge.net/projects/hypernetwork/files/data/processed_data/${NC}"
+    echo -e "${BLUE}https://sourceforge.net/projects/hypernetwalk/files/data/processed_data/${NC}"
 else
     echo -e "${GREEN}✓ 所有文件下载成功！${NC}"
 fi
