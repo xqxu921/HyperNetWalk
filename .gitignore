@@ -17,5 +17,7 @@ __pycache__/
 
 # Conda
 *.conda
+# 忽略 lock 文件，但保留 renv.lock
 *.lock
+!renv.lock
 .env
