@@ -111,7 +111,8 @@ run_pancancer_cohort() {
     
     local start_time=$(date +%s)
     local log_file="$LOG_DIR/pancan_cohort_resource.txt"
-    
+    local usage_file="$LOG_DIR/pancan_cohort_resource_usage.txt"
+
     $TIME_CMD -o "$log_file" \
     Rscript src/run_hypernetwalk.R \
         --mode pancancer \
@@ -125,6 +126,11 @@ run_pancancer_cohort() {
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     
+    if [ -f "$log_file" ]; then
+        cp "$log_file" "$usage_file"
+        print_info "资源使用详情已保存至: $usage_file"
+    fi
+
     print_success "Pan-cancer群体预测完成 (用时: ${duration}秒)"
     
     # 提取内存使用信息
