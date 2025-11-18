@@ -250,7 +250,7 @@ generate_summary() {
             echo "${cancer}:"
             if [ -f "$LOG_DIR/${cancer}_all_resource.txt" ]; then
                 echo "  Cohort & Individual:"
-                grep "Elapsed (wall clock) time\|Maximum resident set size" "$LOG_DIR/${cancer}_cohort_resource.txt" || echo "    未找到资源信息"
+                grep "Elapsed (wall clock) time\|Maximum resident set size" "$LOG_DIR/${cancer}_all_resource.txt" || echo "    未找到资源信息"
             fi
             # if [ -f "$LOG_DIR/${cancer}_individual_resource.txt" ]; then
             #     echo "  Individual:"
