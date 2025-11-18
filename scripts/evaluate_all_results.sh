@@ -243,7 +243,7 @@ generate_summary_report() {
             echo ""
             
             if [ -f "logs/run_summary.txt" ]; then
-                cat "logs/run_summary.txt" | tail -n 20
+                cat "logs/run_summary.txt"
             else
                 echo "   [运行日志不存在]"
             fi
