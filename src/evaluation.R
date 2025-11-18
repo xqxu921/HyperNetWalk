@@ -117,8 +117,13 @@ if (args$level == "individual" | args$level == "all") {
     cat("For cancer type:", cancer_type, "\n")
     cat("Individual Level - ind_precision@10:", avg_ind_prec_10, "\n")
     # 继续写入output文件 包括当前时间及结果，格式规整
-    write(paste0(Sys.time(), "\nIndividual Level - ind_precision@10: ", avg_ind_prec_10, "\n"),
-          file = args$output, append = TRUE)          
+    if (args$level == "all"){
+        write(paste0(Sys.time(), "\nIndividual Level - ind_precision@10: ", avg_ind_prec_10, "\n"),
+          file = args$output, append = TRUE)
+    } else {
+        write(paste0(Sys.time(), "\nIndividual Level - ind_precision@10: ", avg_ind_prec_10, "\n"),
+          file = args$output)
+    }            
 }
 # -------------------------------------------
 cat("Evaluation completed. Results saved to:", args$output, "\n")
