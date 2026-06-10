@@ -1,0 +1,39 @@
+name: RL-GenRisk
+channels:
+  - pytorch
+  - pyg
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools
+  - wheel
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - ipython
+  - jupyter
+  - numba
+  - openpyxl
+  - flask
+  - shap
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
+  - cudatoolkit=11.8
+  - pip:
+      - torch-scatter==2.1.2
+      - torch-sparse==0.6.18
+      - torch-cluster==1.6.1
+      - torch-spline-conv==1.2.2
+      - torch-geometric==2.6.1
+      - community==1.0.0b1
+      - python-louvain
+      - tqdm
+      - brokenaxes
+      - aiohttp
+      - stats==0.1.2a0

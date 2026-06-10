@@ -1,0 +1,10 @@
+node_id,node_class,outdegree
+GABPA,Source_GABPA,14018
+NFKB1,Highlighted_TF,2068
+NR3C1,Highlighted_TF,757
+SP1,Highlighted_TF,8414
+ARNT,Highlighted_TF,6167
+TXN,Other_mediate_nodes,0.5
+PPARA,Highlighted_TF,136
+TNF,Highlighted_TF,6
+ESR1,Highlighted_TF,5096

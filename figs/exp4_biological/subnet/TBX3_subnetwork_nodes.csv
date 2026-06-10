@@ -1,0 +1,11 @@
+node_id,node_class,outdegree
+TBX3,Source_TBX3,6
+CCND1,Highlighted_TF,2
+IL4,Highlighted_TF,1
+APC,Highlighted_TF,41
+CDH1,Other_mediate_nodes,0.5
+PIK3CA,Highlighted_TF,2
+EGF,Highlighted_TF,1
+SRC,Highlighted_TF,1506
+PIK3R1,Highlighted_TF,2
+CTNNB1,Highlighted_TF,221

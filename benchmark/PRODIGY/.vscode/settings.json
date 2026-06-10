@@ -1,0 +1,10 @@
+{
+  "r.rterm.linux": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/my_r_env/bin/R",
+  "r.lsp.path": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/my_r_env/bin/R",
+  "r.rpath.linux": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/my_r_env/bin/R",
+  "r.rterm.option": [
+    "--no-save",
+    "--no-restore"
+  ],
+  "r.lsp.debug": true
+}

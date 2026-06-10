@@ -1,0 +1,7 @@
+node_id,node_class,outdegree
+PHF8,Source_PHF8,5441
+BRIP1,Highlighted_TF,3
+TOPBP1,Other_mediate_nodes,0.5
+TP53,Highlighted_TF,1332
+E2F1,Highlighted_TF,11361
+CDKN2A,Highlighted_TF,1
