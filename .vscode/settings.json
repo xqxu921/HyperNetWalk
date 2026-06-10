@@ -1,8 +1,0 @@
-{
-  "r.rpath.linux": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/hypernetwalk/bin/R",
-  "r.rterm.linux": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/hypernetwalk/bin/radian",
-  "r.bracketedPaste": true,
-  "terminal.integrated.env.linux": {
-    "R_HOME": "/home/xqxu@ZHANGroup.local/Softwares/miniconda3/envs/hypernetwalk/lib/R"
-  }
-}
