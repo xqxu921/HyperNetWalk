@@ -30,6 +30,11 @@ benchmark_cohort/DriverMP-master/DriverMP_example/Mutation_data.txt
 # (Add specific paths above; this list is the safety net.)
 
 # ============================================================
+#  Data archives (uploaded to Zenodo, never committed to Git)
+# ============================================================
+*.zip
+
+# ============================================================
 #  Editable design sources
 # ============================================================
 *.ai

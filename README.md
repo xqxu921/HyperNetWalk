@@ -10,6 +10,7 @@ The resulting sample-specific scores serve as a shared foundation for both predi
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![R >= 4.4.3](https://img.shields.io/badge/R-%3E%3D4.4.3-green.svg)](https://cran.r-project.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20627042.svg)](https://doi.org/10.5281/zenodo.20627042)
 
 <p align="center">
   <img src="assets/overview.png" alt="HyperNetWalk overview" width="820">
