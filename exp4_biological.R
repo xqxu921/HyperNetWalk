@@ -20,6 +20,28 @@ cancers <- c(
   "THCA",
   "UCEC"
 )
+GRN_file <- "./data/RegNet_human_V2.txt"
+GRN_edges <- fread(
+    GRN_file,
+    header = T,
+    sep = "\t",
+    select = 1:2
+)
+GRN_edges$weight <- 1
+if(any(grep("/",GRN_edges$TF,fixed = TRUE))){
+    needs_split <- GRN_edges[grep("/",GRN_edges$TF,fixed = TRUE)]
+    GRN_edges <- GRN_edges[!grepl("/", GRN_edges$TF, fixed = TRUE)]
+
+    split_rows <- needs_split[, {
+        tfs <- strsplit(TF, "/", fixed = TRUE)[[1]]
+        .(TF = tfs, Target = Target, weight = weight)
+    }, by = 1:nrow(needs_split)]
+    split_rows[,nrow:=NULL]
+    GRN_edges <- rbind(GRN_edges,split_rows)
+    GRN_edges <- unique(GRN_edges)
+}
+GRN_net <- graph_from_data_frame(GRN_edges,directed = TRUE)
+dg <- igraph::degree(GRN_net, mode = "out")
 fig_dir <- "./figs/exp4_biological/"
 if (!dir.exists(fig_dir)) {
   dir.create(fig_dir, recursive = TRUE)
@@ -582,14 +604,16 @@ length(levelA_brca_pers)
 length(levelB_brca_pers)
 length(levelC_brca_pers)
 setdiff(novel_pers_brca$gene, c(levelA_brca_pers, levelB_brca_pers, levelC_brca_pers))
-#在novel_coh_brca中添加一列"evidence_level"，如果gene在levelA_brca中则为"A"，如果gene在levelB_brca中则为"B"，如果gene在levelC_brca中则为"C"，否则为"D"
+#在novel_coh_brca中添加一列"evidence_level"，如果gene在levelA_brca中则为"A"，如果gene在levelB_brca中则为"B"，如果gene在levelC_brca中则为"C"，否则为"D";再加一列out_degree
 novel_coh_brca <- novel_coh_brca %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_brca ~ "A",
     gene %in% levelB_brca ~ "B",
     gene %in% levelC_brca ~ "C",
     TRUE ~ "D"
-  ))
+  )) 
+
 write.csv(novel_coh_brca, file.path(fig_dir, "coh", "BRCA_novel_coh_genes.csv"), row.names = FALSE)
 
 novel_coh_df <- data.frame(
@@ -668,6 +692,7 @@ length(levelB_coad_pers)
 length(levelC_coad_pers)
 setdiff(novel_pers_coad$gene, c(levelA_coad_pers, levelB_coad_pers, levelC_coad_pers))
 novel_coh_coad <- novel_coh_coad %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_coad ~ "A",
     gene %in% levelB_coad ~ "B",
@@ -751,6 +776,7 @@ length(levelB_hnsc_pers)
 length(levelC_hnsc_pers)
 setdiff(novel_pers_hnsc$gene, c(levelA_hnsc_pers, levelB_hnsc_pers, levelC_hnsc_pers))
 novel_coh_hnsc <- novel_coh_hnsc %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_hnsc ~ "A",
     gene %in% levelB_hnsc ~ "B",
@@ -833,6 +859,7 @@ length(levelB_kirc_pers)
 length(levelC_kirc_pers)
 setdiff(novel_pers_kirc$gene, c(levelA_kirc_pers, levelB_kirc_pers, levelC_kirc_pers))
 novel_coh_kirc <- novel_coh_kirc %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_kirc ~ "A",
     gene %in% levelB_kirc ~ "B",
@@ -915,6 +942,7 @@ length(levelB_kirp_pers)
 length(levelC_kirp_pers)
 setdiff(novel_pers_kirp$gene, c(levelA_kirp_pers, levelB_kirp_pers, levelC_kirp_pers))
 novel_coh_kirp <- novel_coh_kirp %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_kirp ~ "A",
     gene %in% levelB_kirp ~ "B",
@@ -997,6 +1025,7 @@ length(levelB_lihc_pers)
 length(levelC_lihc_pers)
 setdiff(novel_pers_lihc$gene, c(levelA_lihc_pers, levelB_lihc_pers, levelC_lihc_pers))
 novel_coh_lihc <- novel_coh_lihc %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_lihc ~ "A",  
     gene %in% levelB_lihc ~ "B",
@@ -1093,6 +1122,7 @@ length(levelB_luad_pers)
 length(levelC_luad_pers)
 setdiff(novel_pers_luad$gene, c(levelA_luad_pers, levelB_luad_pers, levelC_luad_pers))
 novel_coh_luad <- novel_coh_luad %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_luad ~ "A",
     gene %in% levelB_luad ~ "B",
@@ -1175,6 +1205,7 @@ length(levelB_lusc_pers)
 length(levelC_lusc_pers)
 setdiff(novel_pers_lusc$gene, c(levelA_lusc_pers, levelB_lusc_pers, levelC_lusc_pers))
 novel_coh_lusc <- novel_coh_lusc %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_lusc ~ "A",
     gene %in% levelB_lusc ~ "B",
@@ -1257,6 +1288,7 @@ length(levelB_prad_pers)
 length(levelC_prad_pers)
 setdiff(novel_pers_prad$gene, c(levelA_prad_pers, levelB_prad_pers, levelC_prad_pers))
 novel_coh_prad <- novel_coh_prad %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_prad ~ "A",
     gene %in% levelB_prad ~ "B",
@@ -1339,6 +1371,7 @@ length(levelB_stad_pers)
 length(levelC_stad_pers)
 setdiff(novel_pers_stad$gene, c(levelA_stad_pers, levelB_stad_pers, levelC_stad_pers))
 novel_coh_stad <- novel_coh_stad %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_stad ~ "A",
     gene %in% levelB_stad ~ "B",
@@ -1421,6 +1454,7 @@ length(levelB_thca_pers)
 length(levelC_thca_pers)
 setdiff(novel_pers_thca$gene, c(levelA_thca_pers, levelB_thca_pers, levelC_thca_pers))
 novel_coh_thca <- novel_coh_thca %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_thca ~ "A",
     gene %in% levelB_thca ~ "B",
@@ -1501,6 +1535,7 @@ length(levelB_ucec_pers)
 length(levelC_ucec_pers)
 setdiff(novel_pers_ucec$gene, c(levelA_ucec_pers, levelB_ucec_pers, levelC_ucec_pers))
 novel_coh_ucec <- novel_coh_ucec %>%
+  mutate(out_degree = dg[gene]) %>%
   mutate(evidence_level = case_when(
     gene %in% levelA_ucec ~ "A",
     gene %in% levelB_ucec ~ "B",
@@ -1536,27 +1571,6 @@ comb_adj_mat0@x[comb_adj_mat0@x <= 1] <- 0
 comb_adj_mat0 <- drop0(comb_adj_mat0)
 comb_adj_lists <- build_adj_lists(comb_adj_mat0)
 
-GRN_file <- "./data/RegNet_human_V2.txt"
-GRN_edges <- fread(
-    GRN_file,
-    header = T,
-    sep = "\t",
-    select = 1:2
-)
-GRN_edges$weight <- 1
-if(any(grep("/",GRN_edges$TF,fixed = TRUE))){
-    needs_split <- GRN_edges[grep("/",GRN_edges$TF,fixed = TRUE)]
-    GRN_edges <- GRN_edges[!grepl("/", GRN_edges$TF, fixed = TRUE)]
-
-    split_rows <- needs_split[, {
-        tfs <- strsplit(TF, "/", fixed = TRUE)[[1]]
-        .(TF = tfs, Target = Target, weight = weight)
-    }, by = 1:nrow(needs_split)]
-    split_rows[,nrow:=NULL]
-    GRN_edges <- rbind(GRN_edges,split_rows)
-    GRN_edges <- unique(GRN_edges)
-}
-GRN_net <- graph_from_data_frame(GRN_edges,directed = TRUE)
 TF <- V(GRN_net)$name[which(igraph::degree(GRN_net,mode="out") > 0)]
 
 comb_TF <- TF[grepl("::",TF,fixed=TRUE)]

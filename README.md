@@ -164,15 +164,15 @@ Results are written to `output_dir/<cancer_type>/`:
 | `mut_data_file` | — | Path to the mutation matrix |
 | `exp_data_file` | — | Path to the expression matrix |
 | `output_dir` | — | Output directory |
-| `k` | `100` | Gene-length normalization scale |
-| `l0` | `100000` | Gene-length threshold below which the length factor is 1 |
 | `max_degs` | `500` | Maximum number of DEGs per sample used as restart sources in the reverse walk |
-| `delta` | `0.1` | Hypergraph edge-weighting parameter |
-| `theta` | `0.85` | Random-walk retention probability (the restart probability is `1 - theta`) |
+| `alpha` | `0.5` | Structural parameter controlling the probability of transitioning from Layer 2 to Layer 1 during reverse propagation |
+| `sigma` | `0.1` | Hypergraph edge-weighting parameter |
+| `r` | `0.15` | Random-walk restart probability in Stage I |
+| `gamma` | `0.15` | Random-walk restart probability in Stage II |
 | `ifparallel` | `TRUE` | Enable parallel processing |
 | `num_cores` | `50` | Number of cores when running in parallel — **lower to match your machine** |
 
-See the paper for the full definitions of `delta` and `theta`.
+See the paper for the full definitions of `alpha` and `sigma`.
 
 ### Runtime & resources
 

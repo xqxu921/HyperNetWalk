@@ -198,16 +198,58 @@ res_cross_cancer <- lapply(names(methods),function(method){
 
 # Panel B: comparison of different methods
 #只保留predicted_cancer和reference_cancer相同的行,每种方法画boxplot+jitter图
+library(tidyr)
+library(ggsignif)
 hit_df_filter <- hit_df %>% filter(Predicted_Cancer == Reference_Cancer)
 median_scores <- hit_df_filter %>%
     filter(Method != "HyperNetWalk") %>%  # 注意：你的数据列名是首字母大写的 Method
     group_by(Method) %>%
     summarize(med_prec = median(Overlap_Proportion, na.rm = TRUE)) %>%
     arrange(desc(med_prec))
+
 method_levels <- c("HyperNetWalk", median_scores$Method)
 hit_df_filter$Method <- factor(hit_df_filter$Method, levels = method_levels)
 hit_df_filter <- hit_df_filter %>%
     mutate(is_proposed = ifelse(Method == "HyperNetWalk", "Proposed", "Baseline"))
+
+best_baseline <- as.character(median_scores$Method[1])
+test_df <- hit_df_filter %>%
+    filter(Method %in% c("HyperNetWalk", best_baseline)) %>%
+    transmute(
+        cancer = Reference_Cancer,
+        Method = as.character(Method),
+        value = Overlap_Proportion
+    ) %>%
+    pivot_wider(names_from = Method, values_from = value) %>%
+    filter(
+        !is.na(.data[["HyperNetWalk"]]),
+        !is.na(.data[[best_baseline]])
+    )
+
+p_val <- wilcox.test(
+    test_df[["HyperNetWalk"]],
+    test_df[[best_baseline]],
+    paired = TRUE,
+    exact = FALSE
+)$p.value
+
+delta_median <- median(
+    test_df[["HyperNetWalk"]] - test_df[[best_baseline]],
+    na.rm = TRUE
+)
+
+p_label <- if (p_val < 0.001) {
+    paste0("italic(P) < 0.001")
+} else {
+    paste0("italic(P) == ", sprintf("%.3f", p_val))
+}
+
+y_max <- max(hit_df_filter$Overlap_Proportion, na.rm = TRUE)
+y_min <- min(hit_df_filter$Overlap_Proportion, na.rm = TRUE)
+y_range <- y_max - y_min
+if (y_range == 0) y_range <- 1
+
+y_pos <- y_max + 0.06 * y_range
 
 p_hit <- ggplot(hit_df_filter, aes(x = Method, y = Overlap_Proportion)) +
     # 箱线图层：半透明、去离群点、固定宽度
@@ -229,6 +271,7 @@ p_hit <- ggplot(hit_df_filter, aes(x = Method, y = Overlap_Proportion)) +
         color = "white",
         stroke = 0.5
     ) +
+    
     # 手动指定颜色：Proposed(砖红) vs Baseline(高级灰)
     scale_fill_manual(values = c("Proposed" = "#D94841", "Baseline" = "#D9D9D9")) +
     

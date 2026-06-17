@@ -168,6 +168,83 @@ get_all_cancers_plot <- function(df_all,metric,y_label) {
 
   df_all <- df_all %>%
     mutate(is_proposed = ifelse(method == "HyperNetWalk", "Proposed", "Baseline"))
+  
+  best_baseline <- as.character(median_scores$method[1])
+  second_baseline <- if (nrow(median_scores) >= 2) {
+    as.character(median_scores$method[2])
+  } else {
+    NA_character_
+  }
+
+  format_p_label <- function(p) {
+    if (is.na(p)) {
+      return("italic(P) == NA")
+    } else if (p < 0.001) {
+      return("italic(P) < 0.001")
+    } else {
+      return(paste0("italic(P) == ", sprintf("%.3f", p)))
+    }
+  }
+
+  get_paired_p <- function(base_method) {
+    test_df <- df_all %>%
+      filter(method %in% c("HyperNetWalk", base_method)) %>%
+      transmute(
+        cancer = cancer_type,
+        method = as.character(method),
+        value = !!sym(metric)
+      ) %>%
+      pivot_wider(names_from = method, values_from = value) %>%
+      filter(
+        !is.na(.data[["HyperNetWalk"]]),
+        !is.na(.data[[base_method]])
+      )
+
+    if (nrow(test_df) < 2) {
+      return(NA_real_)
+    }
+
+    p_val <- tryCatch(
+      wilcox.test(
+        test_df[["HyperNetWalk"]],
+        test_df[[base_method]],
+        paired = TRUE,
+        exact = FALSE
+      )$p.value,
+      error = function(e) NA_real_
+    )
+
+    return(p_val)
+  }
+
+  p_best <- get_paired_p(best_baseline)
+
+  comparisons <- list(c("HyperNetWalk", best_baseline))
+  annotations <- c(format_p_label(p_best))
+
+  add_second <- !is.na(p_best) &&
+    p_best >= 0.05 &&
+    !is.na(second_baseline)
+  if (add_second) {
+    p_second <- get_paired_p(second_baseline)
+    comparisons <- c(comparisons, list(c("HyperNetWalk", second_baseline)))
+    annotations <- c(annotations, format_p_label(p_second))
+  }
+
+  y_max <- max(df_all[[metric]], na.rm = TRUE)
+  y_min <- min(df_all[[metric]], na.rm = TRUE)
+  y_range <- y_max - y_min
+  if (y_range == 0) {
+    y_range <- 1
+  }
+  
+  y_pos <- if (add_second) {
+    c(y_max + 0.06 * y_range, y_max + 0.16 * y_range)
+  } else {
+    y_max + 0.06 * y_range
+  }
+
+  upper_expand <- if (add_second) 0.26 else 0.16
 
   p <- ggplot(df_all, aes(x = method, y = !!sym(metric))) +
     geom_boxplot(
@@ -188,8 +265,19 @@ get_all_cancers_plot <- function(df_all,metric,y_label) {
       color = "white",
       stroke = 0.5
     ) +
+    geom_signif(
+      comparisons = comparisons,
+      annotations = annotations,
+      y_position = y_pos,
+      tip_length = 0.015,
+      textsize = 4.2,
+      size = 0.55,
+      color = "black",
+      parse = TRUE,
+      vjust = 0.2
+    ) +
     scale_fill_manual(values = c("Proposed" = "#D94841", "Baseline" = "#D9D9D9")) +
-    scale_y_continuous(expand = expansion(mult = c(0.02, 0.08))) +
+    scale_y_continuous(expand = expansion(mult = c(0.02, upper_expand))) +
     theme_classic(base_size = 14) +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, color = "black", face = "bold"),
@@ -713,3 +801,4 @@ ggsave(
   width = 18, height = 6, units = "in",
   device = cairo_pdf 
 )
+

@@ -14,11 +14,11 @@ run_hypernetwalk <- function(cancer_type,
                              mut_data_file,
                              exp_data_file,
                              output_dir,
-                             k = 100,
-                             l0 = 100000,
                              max_degs = 500,
-                             delta = 0.1,
-                             theta = 0.85,
+                             alpha = 0.5,
+                             sigma = 0.1,
+                             r = 0.15,
+                             gamma = 0.15,
                              ifparallel = TRUE,
                              num_cores = 50) {
   # Start timing
@@ -30,31 +30,21 @@ run_hypernetwalk <- function(cancer_type,
   logMessage("Loading data for", cancer_type)
   mut_data <- get_mut_data(mut_data_file)
   exp_data <- get_exp_data(exp_data_file)
-  gene_length_df <- read_tsv("./data/gencode.v36.annotation.gtf.gene.probemap",
-                             show_col_types = FALSE) %>%
-    mutate(length = chromEnd - chromStart + 1) %>%
-    group_by(gene) %>%
-    summarise(length = max(length), .groups = "drop")
-  gene_lengths <- gene_length_df$length
-  names(gene_lengths) <- gene_length_df$gene
-  gene_length_factors <- map_dbl(gene_lengths, get_length_factor, l0, k)
-  mut_data <- mut_data[rownames(mut_data) %in% gene_length_df$gene, ]
-  exp_data <- exp_data[rownames(exp_data) %in% gene_length_df$gene, ]
   
   # Stage 1: Sample-specific RWR
   logMessage("\nStarting Stage 1: Sample-specific Random Walks")
   objs <- get_objs(cancer_type, mut_data, exp_data)
   mut_data <- objs$mut_mat
-  com_samples <- colnames(mut_data)
+  # com_samples <- colnames(mut_data)
   exp_data <- objs$exp_data
-  objs <- RW_on_layered_net(objs, ifparallel, num_cores, max_degs)
+  objs <- RW_on_layered_net(objs, ifparallel, num_cores, max_degs, alpha, r)
   
   # Stage 2: Hypergraph RWR
   logMessage("\nStarting Stage 2: Hypergraph Integration")
   logMessage("\nStarting Hypergraph Integration for Sample-specific Results")
   co_mut <- t(mut_data) %*% mut_data
   sim_mat <- cor(exp_data, method = "pearson")
-  objs <- HRWR_sample_specific(objs, co_mut, sim_mat, cancer_type, delta, theta, ifparallel, num_cores)
+  objs <- HRWR_sample_specific(objs, co_mut, sim_mat, cancer_type, sigma, gamma, ifparallel, num_cores)
   outfile <- file.path(output_dir, cancer_type)
   if (!dir.exists(outfile)) {
     dir.create(outfile, recursive = TRUE)
@@ -78,7 +68,7 @@ run_hypernetwalk <- function(cancer_type,
   logMessage('\nStarting Hypergraph Integration for Cohort')
   scores <- HRWR_cohort(
     objs,
-    theta,
+    gamma,
     num_cores
   )
   
@@ -253,7 +243,7 @@ get_objs <- function(cancer_type, mut_data, exp_data) {
   )
 }
 
-RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
+RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500, alpha = 0.5, theta = 0.15) {
   comb_adj_mat <- combine_STRING_and_omnipath()
   nodes_ppi <- rownames(comb_adj_mat)
 
@@ -463,7 +453,11 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
       )
       P[intersect(nodes_ppi_i, nodes_ppi), intersect(nodes_ppi_i, nodes_ppi)] <- sub_PPI_adj
       sub_PPI_adj <- P[nodes_ppi_i, nodes_ppi_i]
-      P[cbind(match_l1_TF, length(nodes_ppi_i) + match_l2_TF)] <- pmax(1, colSums(sub_GRN_adj)[match_l2_TF])
+      if (alpha * (1-alpha) == 0) {
+        message("Warning: alpha must be between 0 and 1, exclusive. Setting alpha to 0.5.") 
+        alpha <- 0.5
+      }
+      P[cbind(match_l1_TF, length(nodes_ppi_i) + match_l2_TF)] <- alpha / (1-alpha) * pmax(1, colSums(sub_GRN_adj)[match_l2_TF])
       if (!is.null(intersect(comb_TF_i, nodes_grn_i))) {
         for (ctf in intersect(comb_TF_i, nodes_grn_i)) {
           ctf_l2_idx <- which(intersect(nodes_grn_i, TF) == ctf)
@@ -471,7 +465,7 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
           ctf_l1_idx <- match(tfs, nodes_ppi_i)
           ctf_l1_idx <- ctf_l1_idx[!is.na(ctf_l1_idx)]
           if (length(ctf_l1_idx) > 0) {
-            P[cbind(ctf_l1_idx, length(nodes_ppi_i) + ctf_l2_idx)] <- pmax(0.5, colSums(sub_GRN_adj)[ctf_l2_idx]) / length(ctf_l1_idx)
+            P[cbind(ctf_l1_idx, length(nodes_ppi_i) + ctf_l2_idx)] <- alpha / (1-alpha) * pmax(1, colSums(sub_GRN_adj)[ctf_l2_idx]) / length(ctf_l1_idx)
           }
         }
       }
@@ -489,7 +483,7 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
       # names(z_normal) <- paste0("TAR_",names(z_normal))
       # v0[deg_i] <- abs(z_normal[deg_i])
       v0 <- v0 / sum(v0)
-      rw <- randomwalk_withrestart(P, mut_genes_i, v0 = v0)
+      rw <- randomwalk_withrestart(P, mut_genes_i,theta = theta, v0 = v0)
       P_i <- rw$vt[intersect(mut_genes_i, nodes_i)]
       P_i <- P_i / sum(P_i)
       return(list(P_i = P_i, vt = rw$vt))
@@ -601,7 +595,7 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
       )
       P[intersect(nodes_ppi_i, nodes_ppi), intersect(nodes_ppi_i, nodes_ppi)] <- sub_PPI_adj
       sub_PPI_adj <- P[nodes_ppi_i, nodes_ppi_i]
-      P[cbind(match_l1_TF, length(nodes_ppi_i) + match_l2_TF)] <- pmax(1, colSums(sub_GRN_adj)[match_l2_TF])
+      P[cbind(match_l1_TF, length(nodes_ppi_i) + match_l2_TF)] <- alpha / (1-alpha) * pmax(1, colSums(sub_GRN_adj)[match_l2_TF])
       if (!is.null(intersect(comb_TF_i, nodes_grn_i))) {
         for (ctf in intersect(comb_TF_i, nodes_grn_i)) {
           ctf_l2_idx <- which(intersect(nodes_grn_i, TF) == ctf)
@@ -609,7 +603,7 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
           ctf_l1_idx <- match(tfs, nodes_ppi_i)
           ctf_l1_idx <- ctf_l1_idx[!is.na(ctf_l1_idx)]
           if (length(ctf_l1_idx) > 0) {
-            P[cbind(ctf_l1_idx, length(nodes_ppi_i) + ctf_l2_idx)] <- pmax(0.5, colSums(sub_GRN_adj)[ctf_l2_idx]) / length(ctf_l1_idx)
+            P[cbind(ctf_l1_idx, length(nodes_ppi_i) + ctf_l2_idx)] <- alpha / (1-alpha) * pmax(1, colSums(sub_GRN_adj)[ctf_l2_idx]) / length(ctf_l1_idx)
           }
         }
       }
@@ -624,7 +618,7 @@ RW_on_layered_net <- function(objs, ifparallel, num_cores, max_degs = 500) {
       names(v0) <- nodes_i
       v0[deg_i] <- 1
       v0 <- v0 / sum(v0)
-      rw <- randomwalk_withrestart(P, mut_genes_i, v0 = v0)
+      rw <- randomwalk_withrestart(P, mut_genes_i, theta = theta, v0 = v0)
       P_i <- rw$vt[intersect(mut_genes_i, nodes_i)]
       P_i <- P_i / sum(P_i)
       P0[names(P_i), samples[i]] <- P_i
@@ -740,7 +734,7 @@ HRWR_sample_specific <- function(objs,
                                  co_mut,
                                  sim_mat,
                                  cancer_type,
-                                 delta,
+                                 sigma,
                                  theta,
                                  ifparallel,
                                  num_cores) {
@@ -804,7 +798,7 @@ HRWR_sample_specific <- function(objs,
         sum(head(sort(
           x, decreasing = TRUE
         ), 3)))
-      W_e_i <- get_hyperedge_weight(sim_mat_i, delta, ref_scores = top_rsum)
+      W_e_i <- get_hyperedge_weight(sim_mat_i, sigma, ref_scores = top_rsum)
       P_i <- get_hyper_P(H_i, W_e_i, W_ve_i)
       diag(P_i) <- 0
       P_i <- normalize_rows(P_i)
@@ -853,7 +847,7 @@ HRWR_sample_specific <- function(objs,
         sum(head(sort(
           x, decreasing = TRUE
         ), 3)))
-      W_e_i <- get_hyperedge_weight(sim_mat_i, delta, ref_scores = top_rsum)
+      W_e_i <- get_hyperedge_weight(sim_mat_i, sigma, ref_scores = top_rsum)
       P_i <- get_hyper_P(H_i, W_e_i, W_ve_i)
       diag(P_i) <- 0
       P_i <- normalize_rows(P_i)
@@ -927,9 +921,9 @@ HRWR_cohort <- function(objs,
 
 # compute hyperedge weights
 get_hyperedge_weight <- function(sim_mat_i,
-                                 delta = 0.1,
+                                 sigma = 0.1,
                                  ref_scores = NULL) {
-  W_e_i <- exp(-(1 - sim_mat_i) ^ 2 / (2 * delta ^ 2))
+  W_e_i <- exp(-(1 - sim_mat_i) ^ 2 / (2 * sigma ^ 2))
   if (!is.null(ref_scores)) {
     # W_e_i <- matrix(ref_scores,nrow=1)
     W_e_i <- W_e_i * ref_scores
@@ -1023,7 +1017,7 @@ normalize_rows <- function(mat) {
 randomwalk_withrestart <-
   function(P_i,
            mut_genes_i,
-           theta = 0.85,
+           theta = 0.15,
            v0 = NULL) {
     # cat("Starting random walk on sample:", sample_i, "\n")
     if (is.null(v0)) {
@@ -1040,7 +1034,7 @@ randomwalk_withrestart <-
     vt <- v0
     for (k in 1:10000) {
       v_old <- vt
-      vt <- theta * t(P_i) %*% vt + (1 - theta) * v0
+      vt <- (1-theta) * t(P_i) %*% vt + theta * v0
       dis <- sum(abs(vt - v_old))
       # Distance <- append(Distance,dis)
       
