@@ -1649,44 +1649,45 @@ plot_visualize_subtype <- function(cancer, k, fig_dir){
     UMAP2 = umap_fit$layout[, 2]
   ) %>%
     left_join(cluster_labels, by = "X_PATIENT")
-  p <- ggplot(umap_df, aes(x = UMAP1, y = UMAP2)) +
-    geom_point(aes(fill = Cluster), shape = 21, color = "grey95", size = 2.5, alpha = 0.85, stroke = 0.15) +
-    scale_fill_manual(values = my_colors_palette) +
-    labs(title = paste0(cancer, " HyperNetWalk Subtypes (K=", k, ")"), x = "UMAP 1", y = "UMAP 2", fill = "Subtype") +
-    theme_bw(base_size = 12) +
-    theme(
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      panel.border = element_rect(color = "grey60", linewidth = 0.5),
-      axis.text = element_text(color = "black"),
-      legend.position = "right",
-      legend.key = element_blank(),
-      legend.text = element_text(size = 9),
-      aspect.ratio = 1
-    ) +
-    guides(fill = guide_legend(override.aes = list(size = 4, alpha = 1)))
   library(TCGAbiolinks)
   subtypes_all <- PanCancerAtlas_subtypes()
-  subtypes_c <- subtypes_all[subtypes_all$cancer.type == cancer,]
-  if (nrow(subtypes_c) > 0) {
+  subtypes_c <- subtypes_all %>%
+    filter(cancer.type == cancer) %>%
+    mutate(X_PATIENT = substr(pan.samplesID, 1, 12))
+  if (length(intersect(umap_df$X_PATIENT, subtypes_c$X_PATIENT)) > 0) {
     subtype_c_clean <- subtypes_c %>%
       filter(!is.na(Subtype_mRNA) & Subtype_mRNA != "NA") %>%
-      mutate(X_PATIENT = substr(pan.samplesID, 1, 12)) %>%
       select(X_PATIENT, Subtype_mRNA) %>%
       distinct(X_PATIENT, .keep_all = TRUE)
     
     umap_df_sub <- umap_df %>%
       left_join(subtype_c_clean, by = "X_PATIENT") %>%
       filter(!is.na(Subtype_mRNA))
+    p <- ggplot(umap_df_sub, aes(x = UMAP1, y = UMAP2)) +
+      geom_point(aes(fill = Cluster), shape = 21, color = "grey95", size = 2.5, alpha = 0.85, stroke = 0.15) +
+      scale_fill_manual(values = my_colors_palette) +
+      labs(title = paste0("TF-Layer-Derived Subtypes (K=", k, ")"), x = "UMAP 1", y = "UMAP 2", fill = "Subtype") +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "grey60", linewidth = 0.5),
+        axis.text = element_text(color = "black"),
+        legend.position = "right",
+        legend.key = element_blank(),
+        legend.text = element_text(size = 9),
+        aspect.ratio = 1
+      ) +
+      guides(fill = guide_legend(override.aes = list(size = 4, alpha = 1)))
     p_sub <- ggplot(umap_df_sub, aes(x = UMAP1, y = UMAP2)) +
       geom_point(aes(fill = Subtype_mRNA), shape = 21, color = "grey95", size = 2.5, alpha = 0.85, stroke = 0.15) +
       scale_fill_manual(values = rev(my_colors_palette)) +
       labs(
-        title = paste0(cancer, " Known Subtype Visualization"),
+        title = "TCGA-Defined Subtypes",
         x = "UMAP 1",
         y = "UMAP 2",
-        fill = "Known Subtype"
+        fill = "Subtype"
       ) +
       theme_bw(base_size = 12) +
       theme(
@@ -1701,9 +1702,13 @@ plot_visualize_subtype <- function(cancer, k, fig_dir){
         aspect.ratio = 1
       ) +
       guides(fill = guide_legend(override.aes = list(size = 4, alpha = 1)))
-    # 将两个图并排显示
+    # 将两个图并排显示,用cancer作为图片大标题
     library(patchwork)
-    p_combined <- p + p_sub + plot_annotation(tag_levels = 'A')
+    p_combined <- p + p_sub + plot_annotation(tag_levels = 'A', title = cancer) &
+      theme(
+        plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+        plot.tag = element_text(face = "bold", size = 12)
+      )
     ggsave(
       filename = file.path(fig_dir, paste0(cancer, "_Subtype_Visualization_K", k, ".pdf")),
       plot = p_combined,
@@ -1711,7 +1716,25 @@ plot_visualize_subtype <- function(cancer, k, fig_dir){
       height = 5.5,
       bg = "white"
     )
+    return(p_combined)
   } else {
+    p <- ggplot(umap_df, aes(x = UMAP1, y = UMAP2)) +
+      geom_point(aes(fill = Cluster), shape = 21, color = "grey95", size = 2.5, alpha = 0.85, stroke = 0.15) +
+      scale_fill_manual(values = my_colors_palette) +
+      labs(title = paste0(cancer, " HyperNetWalk Subtypes (K=", k, ")"), x = "UMAP 1", y = "UMAP 2", fill = "Subtype") +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "grey60", linewidth = 0.5),
+        axis.text = element_text(color = "black"),
+        legend.position = "right",
+        legend.key = element_blank(),
+        legend.text = element_text(size = 9),
+        aspect.ratio = 1
+      ) +
+      guides(fill = guide_legend(override.aes = list(size = 4, alpha = 1)))
     ggsave(
       filename = file.path(fig_dir, paste0(cancer, "_Subtype_Visualization_K", k, ".pdf")),
       plot = p,
@@ -1719,5 +1742,6 @@ plot_visualize_subtype <- function(cancer, k, fig_dir){
       height = 6.2,
       bg = "white"
     )
+    return(p)
   }
 }

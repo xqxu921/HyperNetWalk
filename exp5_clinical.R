@@ -873,6 +873,11 @@ arranged_grid <- arrange_ggsurvplots(
 )
 ggsave(filename = file.path(fig_dir,"survival_analysis_hypernetwalk_subtypes.pdf"), plot = arranged_grid, width = 18, height = 22,device="pdf")
 
-plot_visualize_subtype("KIRP",3,fig_dir)
-plot_visualize_subtype("LIHC",3,fig_dir)
-plot_visualize_subtype("UCEC",4,fig_dir)
+p_kirp <- plot_visualize_subtype("KIRP",3,fig_dir)
+p_lihc <- plot_visualize_subtype("LIHC",3,fig_dir)
+p_ucec <- plot_visualize_subtype("UCEC",4,fig_dir)
+
+library(patchwork)
+#拼成一张图，各占一行
+combined_plot <- (p_kirp / p_lihc / p_ucec) + plot_layout(ncol = 1, heights = c(1, 1, 1))
+ggsave(filename = file.path(fig_dir,"subtype_visualization.pdf"), plot = combined_plot, width = 12.5, height = 18, device = "pdf")
