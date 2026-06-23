@@ -1113,6 +1113,8 @@ levelB_luad_pers <- union(levelB_luad_pers, intersect(novel_pers_luad$gene, cm_l
 levelC_luad_pers <- union(levelC_luad_pers, intersect(novel_pers_luad$gene, CM_df$gene_normalized))
 levelB_luad <- setdiff(levelB_luad, levelA_luad)
 levelC_luad <- setdiff(levelC_luad, union(levelA_luad, levelB_luad))
+levelB_luad_pers <- setdiff(levelB_luad_pers, levelA_luad_pers)
+levelC_luad_pers <- setdiff(levelC_luad_pers, union(levelA_luad_pers, levelB_luad_pers))
 length(levelA_luad)
 length(levelB_luad)
 length(levelC_luad)

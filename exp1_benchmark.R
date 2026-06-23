@@ -300,11 +300,11 @@ get_all_cancers_plot <- function(df_all,metric,y_label) {
 panel_A1 <- get_all_cancers_plot(df_all_pers,"avg_precision", paste0("Precision@", Nc_min))
 
 # Cohort results
-# Cohort methods: HyperNetWalk, dndscv, DriverNet, Subdyquency, DriverRWH, DrvierMP
+# Cohort methods: HyperNetWalk, dNdScv, DriverNet, Subdyquency, DriverRWH, DrvierMP
 # Metrics: Precision@k, Recall@k, F1@k, AUROC, AUPRC, pAUROC, pAUPRC
 methods_coh <- list(
   HyperNetWalk = "./results/HyperNetWalk/",
-  dndscv = "./results/dndscv/",
+  dNdScv = "./results/dndscv/",
   DriverNet = "./results/DriverNet/",
   Subdyquency = "./results/Subdyquency/",
   DriverRWH = "./results/DriverRWH/",
